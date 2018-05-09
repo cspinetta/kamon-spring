@@ -14,40 +14,27 @@
  * =========================================================================================
  */
 
-package kamon.servlet.v3.bench
+package kamon.spring.bench
 
 import java.util.concurrent.TimeUnit
 
-import kamon.Kamon
-import kamon.servlet.v3.server.JettyServer
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet}
-import org.apache.http.impl.client.HttpClients
+import kamon.spring.client.HttpClientSupport
+import kamon.spring.webapp.AppSupport
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 
 @State(Scope.Benchmark)
-class KamonFilterBenchmark {
-
-  val server = new JettyServer()
-  var port: Int = 0
+class KamonFilterBenchmark extends HttpClientSupport with AppSupport {
 
   @Setup(Level.Trial)
-  def setup(): Unit = {
-    Kamon.config()
-    server.start()
-    port = server.selectedPort
+  def setup(serverConfig: ServerConfig): Unit = {
+    if (serverConfig.startKamon == "true") startAppWithKamon()
+    else startAppAlone()
   }
 
   @TearDown(Level.Trial)
   def doTearDown(): Unit = {
-    server.stop()
-  }
-  private val httpClient = HttpClients.createDefault()
-
-  private def get(path: String, headers: Seq[(String, String)] = Seq()): CloseableHttpResponse = {
-    val request = new HttpGet(s"http://127.0.0.1:$port$path")
-    headers.foreach { case (name, v) => request.addHeader(name, v) }
-    httpClient.execute(request)
+    stopApp()
   }
 
   /**
@@ -102,24 +89,30 @@ class KamonFilterBenchmark {
     blackhole.consume(get("/tracing/ok"), incomingContext.headersB3)
   }
 
-  /**
-    * This benchmark attempts to measure the performance with NO tracing NEITHER metrics enabled.
-    *
-    * @param blackhole a { @link Blackhole} object supplied by JMH
-    */
-  @Benchmark
-  @BenchmarkMode(Array(Mode.AverageTime))
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Fork
-  def none_tracing(blackhole: Blackhole): Unit = {
-    blackhole.consume(get("/ok"))
-  }
+//  /**
+//    * This benchmark attempts to measure the performance with NO tracing NEITHER metrics enabled.
+//    *
+//    * @param blackhole a { @link Blackhole} object supplied by JMH
+//    */
+//  @Benchmark
+//  @BenchmarkMode(Array(Mode.AverageTime))
+//  @OutputTimeUnit(TimeUnit.NANOSECONDS)
+//  @Fork
+//  def none_tracing(blackhole: Blackhole): Unit = {
+//    blackhole.consume(get("/ok"))
+//  }
 
+}
+
+@State(Scope.Benchmark)
+class ServerConfig {
+  @Param(Array("true","false")) var startKamon: String = ""
 }
 
 @State(Scope.Benchmark)
 class IncomingContext {
   import kamon.trace.SpanCodec.B3.{Headers => B3Headers}
+
 
   val headersB3 = Seq(
     (B3Headers.TraceIdentifier, "1234"),
