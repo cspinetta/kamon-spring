@@ -81,4 +81,4 @@ lazy val kamonSpringBench = Project("benchmarks", file("kamon-spring-bench"))
   .settings(
     libraryDependencies ++=
       compileScope(springBootStarterWeb, springStarterJetty, httpClient))
-  .dependsOn(kamonSpring)
+  .dependsOn(kamonSpringAuto)
