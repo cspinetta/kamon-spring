@@ -34,7 +34,7 @@ val scalatest               = "org.scalatest"             %% "scalatest"        
 
 lazy val root = (project in file("."))
   .settings(noPublishing: _*)
-  .aggregate(kamonSpring, kamonSpringBench)
+  .aggregate(kamonSpring, kamonSpringAuto, kamonSpringBench)
 
 val commonSettings = Seq(
   scalaVersion := "2.12.6",
@@ -45,7 +45,7 @@ val commonSettings = Seq(
     "-language:postfixOps") ++ (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2,10)) => Seq("-Yno-generic-signatures", "-target:jvm-1.7")
     case Some((2,11)) => Seq("-Ybackend:GenBCode","-Ydelambdafy:method","-target:jvm-1.8")
-    case Some((2,12)) => Seq("-opt:l:method")
+    case Some((2,12)) => Seq("-opt:l:method","-target:jvm-1.8")
     case _ => Seq.empty
   })
 )
@@ -76,6 +76,8 @@ lazy val kamonSpringBench = Project("benchmarks", file("kamon-spring-bench"))
   .settings(commonSettings: _*)
   .settings(
     moduleName := "kamon-spring-bench",
+    scalaVersion := "2.12.6",
+    crossScalaVersions := Seq("2.12.6"),
     fork in Test := true)
   .settings(noPublishing: _*)
   .settings(
