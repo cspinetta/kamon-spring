@@ -1,24 +1,27 @@
 package kamon.spring
 
+import java.util.concurrent.ExecutionException
+
 import kamon.Kamon
 import kamon.context.Context
-import kamon.spring.client.interceptor.KamonRestTemplateInterceptor
+import kamon.spring.client.interceptor.KamonAsyncRestTemplateInterceptor
 import kamon.spring.webapp.AppSupport
 import kamon.testkit.Reconfigure
 import kamon.trace.Span.TagValue
 import kamon.trace.{Span, SpanCustomizer}
 import org.scalatest.concurrent.Eventually
-import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpec}
-import org.springframework.http.client.ClientHttpRequestInterceptor
-import org.springframework.web.client.{HttpClientErrorException, HttpServerErrorException, RestTemplate}
+import org.scalatest._
+import org.springframework.http.client.AsyncClientHttpRequestInterceptor
+import org.springframework.web.client.{AsyncRestTemplate, HttpClientErrorException, HttpServerErrorException}
 
 import scala.concurrent.duration._
 
 
-class ClientInstrumentationSpec extends WordSpec
+class AsyncClientInstrumentationSpec extends WordSpec
   with Matchers
   with BeforeAndAfterAll
   with Eventually
+  with Inside
   with OptionValues
   with SpanReporter
   with AppSupport
@@ -34,7 +37,7 @@ class ClientInstrumentationSpec extends WordSpec
         |
         |  util.filters {
         |    span-filter {
-        |      includes = [ "sync**" ]
+        |      includes = [ "async**" ]
         |    }
         |  }
         |}
@@ -52,20 +55,20 @@ class ClientInstrumentationSpec extends WordSpec
   }
 
   trait ClientFixture {
-    val restTemplate: RestTemplate = new RestTemplate {
+    val restTemplate: AsyncRestTemplate = new AsyncRestTemplate {
       import scala.collection.JavaConverters._
-      this.setInterceptors(List[ClientHttpRequestInterceptor](new KamonRestTemplateInterceptor).asJava)
+      this.setInterceptors(List[AsyncClientHttpRequestInterceptor](new KamonAsyncRestTemplateInterceptor).asJava)
     }
   }
 
-  "The Client instrumentation on Sync Rest Template" should {
+  "The Client instrumentation on Async Rest Template" should {
     "propagate the current context and generate a span around an outgoing request" in new ClientFixture {
 
       private val okSpan = Kamon.buildSpan("ok-operation-span").start()
 
       val url = s"http://localhost:$port/sync/tracing/ok"
       Kamon.withContext(Context.create(Span.ContextKey, okSpan)) {
-        restTemplate.getForEntity(url, classOf[String]).getStatusCodeValue shouldBe 200
+        restTemplate.getForEntity(url, classOf[String]).get().getStatusCodeValue shouldBe 200
       }
 
       eventually(timeout(3.seconds)) {
@@ -90,12 +93,16 @@ class ClientInstrumentationSpec extends WordSpec
       private val notFoundSpan = Kamon.buildSpan("not-found-operation-span").start()
 
       private val url = s"http://localhost:$port/sync/tracing/not-found"
-      private val exc = intercept[HttpClientErrorException] {
+
+      private val externalExc = intercept[ExecutionException] {
         Kamon.withContext(Context.create(Span.ContextKey, notFoundSpan)) {
-          restTemplate.getForEntity(url, classOf[String])
+          restTemplate.getForEntity(url, classOf[String]).get()
         }
       }
-      exc.getStatusCode.value() shouldBe 404
+
+      inside(externalExc.getCause) { case ex: HttpClientErrorException =>
+        ex.getStatusCode.value() shouldBe 404
+      }
 
       eventually(timeout(3.seconds)) {
 
@@ -120,11 +127,15 @@ class ClientInstrumentationSpec extends WordSpec
 
       private val url = s"http://localhost:$port/sync/tracing/error"
 
-      intercept[HttpServerErrorException] {
+      private val externalExc = intercept[ExecutionException] {
         Kamon.withContext(Context.create(Span.ContextKey, errorSpan)) {
-          restTemplate.getForEntity(url, classOf[String])
+          restTemplate.getForEntity(url, classOf[String]).get()
         }
-      }.getStatusCode.value() shouldBe 500
+      }
+
+      inside(externalExc.getCause) { case ex: HttpServerErrorException =>
+        ex.getStatusCode.value() shouldBe 500
+      }
 
       eventually(timeout(3.seconds)) {
 
@@ -156,7 +167,7 @@ class ClientInstrumentationSpec extends WordSpec
         .withKey(SpanCustomizer.ContextKey, SpanCustomizer.forOperationName(customizedOperationName))
 
       Kamon.withContext(context) {
-        restTemplate.getForEntity(url, classOf[String]).getStatusCodeValue shouldBe 200
+        restTemplate.getForEntity(url, classOf[String]).get().getStatusCodeValue shouldBe 200
       }
 
       eventually(timeout(3.seconds)) {
