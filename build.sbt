@@ -19,6 +19,7 @@ val jettyV7Version = "7.6.21.v20160908"
 
 val kamonCore               = "io.kamon"                  %% "kamon-core"             % kamonVersion
 val kamonTestkit            = "io.kamon"                  %% "kamon-testkit"          % kamonVersion
+val scalaExtension          = "io.kamon"                  %% "kanela-scala-extension" % "0.0.10"
 
 val springBootStarterWeb    = "org.springframework.boot"  %  "spring-boot-starter-web"    % "2.0.1.RELEASE" exclude("org.springframework.boot", "spring-boot-starter-tomcat")
 val springBootStarterTest   = "org.springframework.boot"  %  "spring-boot-starter-test"   % "2.0.1.RELEASE"
@@ -34,7 +35,7 @@ val scalatest               = "org.scalatest"             %% "scalatest"        
 
 lazy val root = (project in file("."))
   .settings(noPublishing: _*)
-  .aggregate(kamonSpring, kamonSpringAuto, kamonSpringBench)
+  .aggregate(kamonSpring, kamonSpringAuto, kamonSpringKanela, kamonSpringBench)
 
 val commonSettings = Seq(
   scalaVersion := "2.12.6",
@@ -69,6 +70,20 @@ lazy val kamonSpringAuto = Project("kamon-spring-auto", file("kamon-spring-auto"
     libraryDependencies ++=
       compileScope(kamonCore, kamonServlet3, springBootAutoconfigure) ++
       providedScope(springBootStarterWeb, servletApiV3) ++
+      testScope(scalatest, kamonTestkit, logbackClassic, springBootStarterTest, springStarterJetty, httpClient))
+
+lazy val kamonSpringKanela = Project("kamon-spring-kanela", file("kamon-spring-kanela"))
+  .dependsOn(kamonSpring)
+  .enablePlugins(JavaAgent)
+//-javaagent:/home/cspinetta/.m2/repository/io/kamon/kanela-agent/0.0.3019-NO-BUNDLED/kanela-agent-0.0.3019-NO-BUNDLED.jar
+  .settings(javaAgents += "io.kamon"    % "kanela-agent"   % "0.0.3019-NO-BUNDLED"  % "compile;test")
+  .settings(moduleName := "kamon-spring-kanela")
+  .settings(parallelExecution in Test := false)
+  .settings(commonSettings: _*)
+  .settings(
+    libraryDependencies ++=
+      compileScope(kamonCore, scalaExtension, springBootStarterWeb) ++
+//      providedScope(springBootStarterWeb, servletApiV3) ++
       testScope(scalatest, kamonTestkit, logbackClassic, springBootStarterTest, springStarterJetty, httpClient))
 
 lazy val kamonSpringBench = Project("benchmarks", file("kamon-spring-bench"))

@@ -2,7 +2,7 @@ package kamon.spring
 
 import kamon.Kamon
 import kamon.context.Context
-import kamon.spring.client.interceptor.KamonRestTemplateInterceptor
+import kamon.spring.client.interceptor.sync.KamonRestTemplateInterceptor
 import kamon.spring.webapp.AppSupport
 import kamon.testkit.Reconfigure
 import kamon.trace.Span.TagValue

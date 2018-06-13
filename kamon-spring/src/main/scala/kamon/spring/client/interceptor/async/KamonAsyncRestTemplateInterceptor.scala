@@ -1,5 +1,6 @@
-package kamon.spring.client.interceptor
+package kamon.spring.client.interceptor.async
 
+import kamon.spring.client.interceptor.KamonSpringClientTracing
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.{AsyncClientHttpRequestExecution, AsyncClientHttpRequestInterceptor, ClientHttpResponse}
 import org.springframework.util.concurrent.{ListenableFuture, SuccessCallback}

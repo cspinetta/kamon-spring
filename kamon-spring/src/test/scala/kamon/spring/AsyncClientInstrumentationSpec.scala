@@ -4,7 +4,7 @@ import java.util.concurrent.ExecutionException
 
 import kamon.Kamon
 import kamon.context.Context
-import kamon.spring.client.interceptor.KamonAsyncRestTemplateInterceptor
+import kamon.spring.client.interceptor.async.KamonAsyncRestTemplateInterceptor
 import kamon.spring.webapp.AppSupport
 import kamon.testkit.Reconfigure
 import kamon.trace.Span.TagValue
@@ -96,6 +96,7 @@ class AsyncClientInstrumentationSpec extends WordSpec
 
       private val externalExc = intercept[ExecutionException] {
         Kamon.withContext(Context.create(Span.ContextKey, notFoundSpan)) {
+          Kamon.currentContext()
           restTemplate.getForEntity(url, classOf[String]).get()
         }
       }
