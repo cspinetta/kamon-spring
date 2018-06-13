@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component
 class AppRunner {
 
   @Bean
-  def kamonFilterRegistration(@Value("${webapp.kamon.enabled}") enabled: Boolean): FilterRegistrationBean[KamonFilterV3] = {
+  def kamonFilterRegistration(@Value("${kamon.spring.web.enabled}") enabled: Boolean): FilterRegistrationBean[KamonFilterV3] = {
     val registrationBean = new FilterRegistrationBean[KamonFilterV3]
     registrationBean.setFilter(new KamonFilterV3)
     registrationBean.addUrlPatterns("/*")

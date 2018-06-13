@@ -1,62 +1,18 @@
-package kamon.spring.kanela
+package kamon.spring
 
 import kamon.Kamon
 import kamon.context.Context
-import kamon.spring.kanela.webapp.AppSupport
-import kamon.testkit.Reconfigure
+import kamon.spring.webapp.AppSupport
 import kamon.trace.Span.TagValue
 import kamon.trace.{Span, SpanCustomizer}
-import org.scalatest._
 import org.scalatest.concurrent.Eventually
+import org.scalatest.{FlatSpec, Inside, Matchers, OptionValues}
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client._
 
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
-
-
-class ClientInstrumentationSpec extends FlatSpec
-  with Matchers
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with Eventually
-  with OptionValues
-  with SpanReporter
-  with AppSupport
-  with Reconfigure
-  with ClientBehaviors {
-
-  override protected def beforeAll(): Unit = {
-    applyConfig(
-      """
-        |kamon {
-        |  metric.tick-interval = 10 millis
-        |  trace.tick-interval = 10 millis
-        |  trace.sampler = "always"
-        |
-        |  util.filters {
-        |    span-filter {
-        |      includes = [ "**" ]
-        |    }
-        |  }
-        |}
-        |
-    """.stripMargin
-    )
-    startRegistration()
-
-  }
-
-  override protected def afterAll(): Unit = {
-    stopRegistration()
-  }
-
-  "A RestTemplate client built by default constructor" should behave like contextPropagation(SyncClientProvider("restTemplateDefault"))
-  "A RestTemplate client built by Builder" should behave like contextPropagation(SyncClientProvider("restTemplateByBuilder"))
-  "A AsyncRestTemplate client built by default constructor" should behave like contextPropagation(AsyncClientProvider("asyncRestTemplateDefault"))
-
-}
 
 trait ClientProvider {
   def port: Int
@@ -65,44 +21,49 @@ trait ClientProvider {
   def validateError[T <: HttpStatusCodeException: ClassTag](exception: Throwable, validatorF: Int => Unit): Unit
 }
 
-case class SyncClientProvider(restTemplateName: String) extends ClientProvider with AppSupport {
-  import Inside._
+object ClientProvider {
 
-  private lazy val app: ConfigurableApplicationContext = startApp(kamonSpringWebEnabled = false)
-  private lazy val restTemplate: RestTemplate = app.getBean(restTemplateName).asInstanceOf[RestTemplate]
+  abstract class Sync extends ClientProvider with AppSupport {
+    import Inside._
 
-  override lazy val port: Int = {
-    restTemplate // force initialization
-    super.port
-  }
+    private lazy val app: ConfigurableApplicationContext = startApp(kamonSpringWebEnabled = false)
 
-  def GetRequest[T: ClassTag](url: String): ResponseEntity[T] =
-    restTemplate.getForEntity(url, implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
+    def restTemplate: RestTemplate
 
-  def validateError[T <: HttpStatusCodeException: ClassTag](exception: Throwable, validatorF: Int => Unit): Unit = {
-    inside(exception) { case ex: T =>
-      validatorF(ex.getStatusCode.value())
+    override lazy val port: Int = {
+      app // force initialization
+      super.port
+    }
+
+    def GetRequest[T: ClassTag](url: String): ResponseEntity[T] =
+      restTemplate.getForEntity(url, implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
+
+    def validateError[T <: HttpStatusCodeException: ClassTag](exception: Throwable, validatorF: Int => Unit): Unit = {
+      inside(exception) { case ex: T =>
+        validatorF(ex.getStatusCode.value())
+      }
     }
   }
-}
 
-case class AsyncClientProvider(restTemplateName: String) extends ClientProvider with AppSupport {
-  import Inside._
+  abstract class Async extends ClientProvider with AppSupport {
+    import Inside._
 
-  private lazy val app: ConfigurableApplicationContext = startApp(kamonSpringWebEnabled = false)
-  private lazy val restTemplate: AsyncRestTemplate = app.getBean(restTemplateName).asInstanceOf[AsyncRestTemplate]
+    private lazy val app: ConfigurableApplicationContext = startApp(kamonSpringWebEnabled = false)
 
-  override lazy val port: Int = {
-    restTemplate // force initialization
-    super.port
-  }
+    def asyncRestTemplate: AsyncRestTemplate
 
-  def GetRequest[T: ClassTag](url: String): ResponseEntity[T] =
-    restTemplate.getForEntity(url, implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]).get()
+    override lazy val port: Int = {
+      app // force initialization
+      super.port
+    }
 
-  def validateError[T <: HttpStatusCodeException: ClassTag](exception: Throwable, validatorF: Int => Unit): Unit = {
-    inside(exception.getCause) { case ex: T =>
-      validatorF(ex.getStatusCode.value())
+    def GetRequest[T: ClassTag](url: String): ResponseEntity[T] =
+      asyncRestTemplate.getForEntity(url, implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]).get()
+
+    def validateError[T <: HttpStatusCodeException: ClassTag](exception: Throwable, validatorF: Int => Unit): Unit = {
+      inside(exception.getCause) { case ex: T =>
+        validatorF(ex.getStatusCode.value())
+      }
     }
   }
 }

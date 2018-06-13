@@ -1,5 +1,4 @@
-package kamon.spring.kanela.instrumentation.advisor
-
+package kamon.spring.instrumentation.advisor
 
 import kamon.spring.client.interceptor.{KamonAsyncInterceptorInjector, KamonSyncInterceptorInjector}
 import kanela.agent.libs.net.bytebuddy.asm.Advice

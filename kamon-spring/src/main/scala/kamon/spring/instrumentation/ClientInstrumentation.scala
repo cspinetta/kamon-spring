@@ -1,6 +1,6 @@
-package kamon.spring.kanela.instrumentation
+package kamon.spring.instrumentation
 
-import kamon.spring.kanela.instrumentation.advisor.{InterceptingAsyncHttpAccessorAdvisor, InterceptingSyncHttpAccessorAdvisor}
+import kamon.spring.instrumentation.advisor.{InterceptingAsyncHttpAccessorAdvisor, InterceptingSyncHttpAccessorAdvisor}
 import kanela.agent.scala.KanelaInstrumentation
 
 class ClientInstrumentation extends KanelaInstrumentation {
