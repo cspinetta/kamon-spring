@@ -14,7 +14,7 @@ import org.springframework.web.client._
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
-trait ClientProvider {
+sealed trait ClientProvider {
   def port: Int
   def GetRequest[T: ClassTag](url: String): ResponseEntity[T]
 
