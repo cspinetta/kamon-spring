@@ -25,7 +25,7 @@ val springBootStarterWeb    = "org.springframework.boot"  %  "spring-boot-starte
 val springBootStarterTest   = "org.springframework.boot"  %  "spring-boot-starter-test"   % "2.0.1.RELEASE"
 val springStarterJetty      = "org.springframework.boot"  %  "spring-boot-starter-jetty"  % "2.0.1.RELEASE"
 val springBootAutoconfigure = "org.springframework.boot"  %  "spring-boot-autoconfigure"  % "2.0.1.RELEASE"
-val kamonServlet3           = "io.kamon"                  %% "kamon-servlet-3.x.x"        % "0.1-14845b9cb92eedf1a091becfbf06b4ad74c16986"
+val kamonServlet3           = "io.kamon"                  %% "kamon-servlet-3.x.x"        % "0.0.1-14845b9cb92eedf1a091becfbf06b4ad74c16986"
 val servletApiV3            = "javax.servlet"             %  "javax.servlet-api"      % "3.0.1"
 
 val httpClient              = "org.apache.httpcomponents" %  "httpclient"             % "4.5.5"

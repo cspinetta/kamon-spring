@@ -18,6 +18,7 @@ package kamon.spring
 
 import com.typesafe.config.ConfigFactory
 import kamon.Kamon
+import kamon.spring.utils.ForkTest
 import kamon.spring.webapp.AppSupport
 import kamon.spring.webapp.controller.{AsyncTracingController, SyncTracingController}
 import kamon.testkit.Reconfigure
@@ -26,7 +27,9 @@ import org.scalatest.concurrent.Eventually
 
 import scala.concurrent.duration.FiniteDuration
 
-class ServerInstrumentationSpec extends FlatSpec
+// TODO: change app to use kanela
+@ForkTest(attachKanelaAgent = true)
+class ServerInstrumentationByKanelaSpec extends FlatSpec
   with Matchers
   with BeforeAndAfterAll
   with Eventually
@@ -53,10 +56,10 @@ class ServerInstrumentationSpec extends FlatSpec
     override def port: Int = self.port
   }
 
-  "A Server with sync controllers instrumented manually" should behave like
+  "A Server with sync controllers instrumented by Kanela" should behave like
     contextPropagation(new Server(prefixEndpoint = "sync", exceptionStatus = 200,
       SyncTracingController.slowlyServiceDuration))
-  "A Server with async controllers instrumented manually" should behave like
+  "A Server with async controllers instrumented by Kanela" should behave like
     contextPropagation(new Server(prefixEndpoint = "async", exceptionStatus = 500,
       AsyncTracingController.slowlyServiceDuration))
 
