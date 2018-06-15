@@ -41,7 +41,7 @@ class ServerInstrumentationByKanelaSpec extends FlatSpec
 
   override protected def beforeAll(): Unit = {
     Kamon.reconfigure(ConfigFactory.load())
-    startApp()
+    startApp(kamonSpringWebEnabled = false)
     startRegistration()
   }
 
@@ -60,7 +60,7 @@ class ServerInstrumentationByKanelaSpec extends FlatSpec
     contextPropagation(new Server(prefixEndpoint = "sync", exceptionStatus = 200,
       SyncTracingController.slowlyServiceDuration))
   "A Server with async controllers instrumented by Kanela" should behave like
-    contextPropagation(new Server(prefixEndpoint = "async", exceptionStatus = 500,
+    contextPropagation(new Server(prefixEndpoint = "async", exceptionStatus = 200,
       AsyncTracingController.slowlyServiceDuration))
 
 }
