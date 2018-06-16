@@ -8,7 +8,7 @@ class ServerInstrumentation  extends KanelaInstrumentation {
 
   forSubtypeOf("org.eclipse.jetty.servlet.ServletHandler") { builder =>
     builder
-      .withAdvisorFor(Constructor, classOf[ServletHandlerAdvisor])
+      .withAdvisorFor(method("initialize"), classOf[ServletHandlerAdvisor])
       .build()
   }
 

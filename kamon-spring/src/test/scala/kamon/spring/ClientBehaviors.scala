@@ -1,9 +1,11 @@
 package kamon.spring
 
+import java.time.temporal.ChronoUnit
+
 import kamon.Kamon
 import kamon.context.Context
 import kamon.spring.webapp.AppSupport
-import kamon.trace.Span.TagValue
+import kamon.trace.Span.{FinishedSpan, TagValue}
 import kamon.trace.{Span, SpanCustomizer}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{FlatSpec, Inside, Matchers, OptionValues}
@@ -68,7 +70,7 @@ object ClientProvider {
   }
 }
 
-trait ClientBehaviors { this: FlatSpec
+trait ClientBehaviors extends KamonSpringLogger { this: FlatSpec
   with Matchers
   with Eventually
   with OptionValues
@@ -103,7 +105,7 @@ trait ClientBehaviors { this: FlatSpec
       }
     }
 
-    it should "propagate the current context and generate a span called not-found around an outgoing request that produced a 404" in {
+    it should "propagate the current context and generate a span called not-found when request produce 404" in {
 
       val notFoundSpan = Kamon.buildSpan("not-found-operation-span").start()
 
@@ -132,7 +134,7 @@ trait ClientBehaviors { this: FlatSpec
       }
     }
 
-    it should "propagate the current context and generate a span with error around an outgoing request that produced a 500" in {
+    it should "propagate the current context and generate a span with error when request produce 500" in {
 
       val errorSpan = Kamon.buildSpan("error-operation-span").start()
 
@@ -164,7 +166,7 @@ trait ClientBehaviors { this: FlatSpec
       }
     }
 
-    it should "propagate the current context and pickup a SpanCustomizer and apply it to the new span and complete the outgoing request" in {
+    it should "propagate the current context and pickup a SpanCustomizer to create a new span" in {
 
       val okSpan = Kamon.buildSpan("ok-operation-span").start()
 

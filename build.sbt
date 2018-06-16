@@ -58,9 +58,9 @@ lazy val kamonSpring = Project("kamon-spring", file("kamon-spring"))
   .enablePlugins(JavaAgent)
 //-javaagent:/home/cspinetta/.m2/repository/io/kamon/kanela-agent/0.0.3019-NO-BUNDLED/kanela-agent-0.0.3019-NO-BUNDLED.jar
   .settings(javaAgents += "io.kamon"    % "kanela-agent"   % "0.0.3019-NO-BUNDLED"  % "compile;test")
-  .settings(parallelExecution in Test := false)
   .settings(commonSettings: _*)
   .settings(KanelaAttacherTest.settings: _*)
+  .settings(parallelExecution in Test := false)
   .settings(
     libraryDependencies ++=
       compileScope(kamonCore, kamonServlet3, scalaExtension) ++

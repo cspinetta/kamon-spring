@@ -2,12 +2,11 @@ package kamon.spring
 
 import java.time.temporal.ChronoUnit
 
-import kamon.spring.client.{HttpClientSupport, HttpClientTest}
-import kamon.spring.webapp.controller.SyncTracingController
+import kamon.spring.client.HttpClientTest
 import kamon.trace.Span
-import kamon.trace.Span.{FinishedSpan, TagValue}
-import org.scalatest.{FlatSpec, Matchers, OptionValues}
+import kamon.trace.Span.TagValue
 import org.scalatest.concurrent.Eventually
+import org.scalatest.{FlatSpec, Matchers, OptionValues}
 
 import scala.concurrent.duration._
 
@@ -35,7 +34,6 @@ trait ServerBehaviors extends KamonSpringLogger {
 
         val span = reporter.nextSpan().value
         val spanTags = stringTag(span) _
-        debug(span)
 
         span.operationName shouldBe s"$prefix.tracing.ok.get"
         spanTags("span.kind") shouldBe "server"
@@ -45,6 +43,7 @@ trait ServerBehaviors extends KamonSpringLogger {
         span.tags("http.status_code") shouldBe TagValue.Number(200)
 
         span.context.parentID.string shouldBe ""
+        reporter.nextSpan() shouldBe empty
       }
     }
 
@@ -56,7 +55,6 @@ trait ServerBehaviors extends KamonSpringLogger {
       eventually(timeout(3 seconds)) {
         val span = reporter.nextSpan().value
         val spanTags = stringTag(span) _
-        debug(span)
 
         span.operationName shouldBe "not-found"
         spanTags("span.kind") shouldBe "server"
@@ -66,6 +64,7 @@ trait ServerBehaviors extends KamonSpringLogger {
         span.tags("http.status_code") shouldBe TagValue.Number(404)
 
         span.context.parentID.string shouldBe ""
+        reporter.nextSpan() shouldBe empty
       }
     }
 
@@ -76,7 +75,6 @@ trait ServerBehaviors extends KamonSpringLogger {
       eventually(timeout(3 seconds)) {
         val span = reporter.nextSpan().value
         val spanTags = stringTag(span) _
-        debug(span)
 
         span.operationName shouldBe s"$prefix.tracing.error.get"
         spanTags("span.kind") shouldBe "server"
@@ -87,17 +85,17 @@ trait ServerBehaviors extends KamonSpringLogger {
         span.tags("http.status_code") shouldBe TagValue.Number(500)
 
         span.context.parentID.string shouldBe ""
+        reporter.nextSpan() shouldBe empty
       }
     }
 
 
-    it should "propagate the current context and respond to the exception endpoint produced with abnormal termination" in {
+    it should "propagate the current context and respond to the controller with abnormal termination" in {
       HttpClientTest(app.port).get(s"/$prefix/tracing/exception").getStatusLine.getStatusCode shouldBe app.exceptionStatus
 
       eventually(timeout(3 seconds)) {
         val span = reporter.nextSpan().value
         val spanTags = stringTag(span) _
-        debug(span)
 
         span.operationName shouldBe s"$prefix.tracing.exception.get"
         spanTags("span.kind") shouldBe "server"
@@ -108,6 +106,7 @@ trait ServerBehaviors extends KamonSpringLogger {
         span.tags("http.status_code") shouldBe TagValue.Number(500)
 
         span.context.parentID.string shouldBe ""
+        reporter.nextSpan() shouldBe empty
       }
     }
 
@@ -119,7 +118,6 @@ trait ServerBehaviors extends KamonSpringLogger {
 
         val span = reporter.nextSpan().value
         val spanTags = stringTag(span) _
-        debug(span)
 
         span.operationName shouldBe s"$prefix.tracing.slowly.get"
         spanTags("span.kind") shouldBe "server"
@@ -129,8 +127,8 @@ trait ServerBehaviors extends KamonSpringLogger {
         span.tags("http.status_code") shouldBe TagValue.Number(200)
 
         span.context.parentID.string shouldBe ""
-
         span.from.until(span.to, ChronoUnit.MILLIS) shouldBe >= (app.slowlyServiceDuration.toMillis)
+        reporter.nextSpan() shouldBe empty
       }
     }
 
@@ -141,7 +139,6 @@ trait ServerBehaviors extends KamonSpringLogger {
 
         val span = reporter.nextSpan().value
         val spanTags = stringTag(span) _
-        debug(span)
 
         span.operationName shouldBe s"$prefix.tracing.ok.get"
         spanTags("span.kind") shouldBe "server"
@@ -152,22 +149,8 @@ trait ServerBehaviors extends KamonSpringLogger {
 
         span.context.parentID.string shouldBe IncomingContext.SpanId
         span.context.traceID.string shouldBe IncomingContext.TraceId
+        reporter.nextSpan() shouldBe empty
       }
-    }
-
-    def debug(span: FinishedSpan): Unit = {
-      logger.info(s"****************************  ${span.operationName}")
-      logger.info(s"****************************  ${stringTag(span)("span.kind")}")
-      logger.info(s"****************************  ${stringTag(span)("component")}")
-      logger.info(s"****************************  ${stringTag(span)("http.method")}")
-      logger.info(s"****************************  ${stringTag(span)("http.url")}")
-      logger.info(s"****************************  ${span.tags("http.status_code")}")
-
-      logger.info(s"****************************  traceID: ${span.context.traceID.string}")
-      logger.info(s"****************************  spanID: ${span.context.spanID.string}")
-      logger.info(s"****************************  parentID: ${span.context.parentID.string}")
-
-      logger.info(s"****************************  ${span.from.until(span.to, ChronoUnit.MILLIS)}")
     }
 
     def stringTag(span: Span.FinishedSpan)(tag: String): String = {

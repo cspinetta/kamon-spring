@@ -7,7 +7,10 @@ import org.scalatest.concurrent.Eventually
 import org.springframework.web.client.{AsyncRestTemplate, RestTemplate}
 
 
-@ForkTest(attachKanelaAgent = true)
+@ForkTest(
+  attachKanelaAgent = true,
+  extraJvmOptions = "-Dkanela.modules.spring-module.instrumentations.0=" +
+    "kamon.spring.instrumentation.ClientInstrumentation ")
 class KamonClientInterceptorInstrumentationSpec extends FlatSpec
   with Matchers
   with BeforeAndAfterAll
@@ -28,7 +31,8 @@ class KamonClientInterceptorInstrumentationSpec extends FlatSpec
         |
         |  util.filters {
         |    span-filter {
-        |      includes = [ "**" ]
+        |      includes = [ "http**" ]
+        |      excludes = [ "sync**", "async**" ]
         |    }
         |  }
         |}
