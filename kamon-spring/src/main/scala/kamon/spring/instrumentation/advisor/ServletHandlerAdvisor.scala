@@ -13,8 +13,8 @@ class ServletHandlerAdvisor
 object ServletHandlerAdvisor {
 
   @RuntimeType
-  @Advice.OnMethodExit()
-  def exitConstructor(@Advice.This servletHandler: Object): Unit = {
+  @Advice.OnMethodEnter()
+  def startInitialization(@Advice.This servletHandler: Object): Unit = {
     val filterHolder = new FilterHolder(classOf[KamonFilterV3])
     val servlet = servletHandler.asInstanceOf[ServletHandler]
     servlet.addFilterWithMapping(filterHolder,"/*", util.EnumSet.of(DispatcherType.REQUEST))
