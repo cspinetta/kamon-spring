@@ -1,11 +1,9 @@
 package kamon.spring
 
-import java.time.temporal.ChronoUnit
-
 import kamon.Kamon
 import kamon.context.Context
 import kamon.spring.webapp.AppSupport
-import kamon.trace.Span.{FinishedSpan, TagValue}
+import kamon.trace.Span.TagValue
 import kamon.trace.{Span, SpanCustomizer}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{FlatSpec, Inside, Matchers, OptionValues}
