@@ -27,7 +27,6 @@ import org.scalatest.concurrent.Eventually
 
 import scala.concurrent.duration.FiniteDuration
 
-// TODO: change app to use kanela
 @ForkTest(attachKanelaAgent = true)
 class ServerInstrumentationByKanelaSpec extends FlatSpec
   with Matchers
