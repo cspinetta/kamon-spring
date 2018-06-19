@@ -7,10 +7,18 @@ trait AppSupport {
   private var _app = Option.empty[ConfigurableApplicationContext]
   private var _port = Option.empty[Int]
 
-  def startApp(kamonSpringWebEnabled: Boolean = true): ConfigurableApplicationContext = {
+  def startJettyApp(kamonSpringWebEnabled: Boolean = true): ConfigurableApplicationContext = {
+    startApp(kamonSpringWebEnabled, classOf[AppJettyRunner])
+  }
+
+  def startTomcatApp(kamonSpringWebEnabled: Boolean = true): ConfigurableApplicationContext = {
+    startApp(kamonSpringWebEnabled, classOf[AppTomcatRunner])
+  }
+
+  private def startApp(kamonSpringWebEnabled: Boolean = true, appClass: Class[_]): ConfigurableApplicationContext = {
     System.setProperty("server.port", 0.toString)
     System.setProperty("kamon.spring.web.enabled", kamonSpringWebEnabled.toString)
-    val configApp = SpringApplication.run(classOf[AppRunner])
+    val configApp = SpringApplication.run(appClass)
     _app = Some(configApp)
     _port = Option(configApp.getEnvironment.getProperty("local.server.port").toInt)
     configApp

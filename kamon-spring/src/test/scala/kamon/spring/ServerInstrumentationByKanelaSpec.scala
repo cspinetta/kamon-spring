@@ -28,7 +28,16 @@ import org.scalatest.concurrent.Eventually
 import scala.concurrent.duration.FiniteDuration
 
 @ForkTest(attachKanelaAgent = true)
-class ServerInstrumentationByKanelaSpec extends FlatSpec
+class JettyServerInstrumentationByKanelaSpec extends ServerInstrumentationSpec {
+  override def startApp(): Unit = startJettyApp(kamonSpringWebEnabled = false)
+}
+
+@ForkTest(attachKanelaAgent = true)
+class TomcatServerInstrumentationByKanelaSpec extends ServerInstrumentationSpec {
+  override def startApp(): Unit = startTomcatApp(kamonSpringWebEnabled = false)
+}
+
+abstract class ServerInstrumentationByKanelaSpec extends FlatSpec
   with Matchers
   with BeforeAndAfterAll
   with Eventually
@@ -38,9 +47,11 @@ class ServerInstrumentationByKanelaSpec extends FlatSpec
   with AppSupport
   with ServerBehaviors { self =>
 
+  def startApp(): Unit
+
   override protected def beforeAll(): Unit = {
     Kamon.reconfigure(ConfigFactory.load())
-    startApp(kamonSpringWebEnabled = false)
+    startApp()
     startRegistration()
   }
 

@@ -15,21 +15,22 @@
 
 val kamonVersion = "1.1.0"
 val jettyV9Version = "9.4.8.v20171121"
-val jettyV7Version = "7.6.21.v20160908"
+val tomcatV8Version = "8.5.31"
 
 val kamonCore               = "io.kamon"                  %% "kamon-core"             % kamonVersion
 val kamonTestkit            = "io.kamon"                  %% "kamon-testkit"          % kamonVersion
 val scalaExtension          = "io.kamon"                  %% "kanela-scala-extension" % "0.0.10"
 
 val springWeb               = "org.springframework"       %  "spring-web"                 % "4.3.18.RELEASE"
-val springBootStarterWeb    = "org.springframework.boot"  %  "spring-boot-starter-web"    % "1.5.14.RELEASE" exclude("org.springframework.boot", "spring-boot-starter-tomcat")
+val springBootStarterWeb    = "org.springframework.boot"  %  "spring-boot-starter-web"    % "1.5.14.RELEASE"
+val springBootStarterWebExcludingTomcat    = "org.springframework.boot"  %  "spring-boot-starter-web"    % "1.5.14.RELEASE" exclude("org.springframework.boot", "spring-boot-starter-tomcat")
 val springBootStarterTest   = "org.springframework.boot"  %  "spring-boot-starter-test"   % "1.5.14.RELEASE"
 val springStarterJetty      = "org.springframework.boot"  %  "spring-boot-starter-jetty"  % "1.5.14.RELEASE"
 val springBootAutoconfigure = "org.springframework.boot"  %  "spring-boot-autoconfigure"  % "1.5.14.RELEASE"
 val kamonServlet3           = "io.kamon"                  %% "kamon-servlet-3.x.x"        % "0.0.1-14845b9cb92eedf1a091becfbf06b4ad74c16986"
-val servletApiV3            = "javax.servlet"             %  "javax.servlet-api"      % "3.0.1"
-val jettyServletsV9         = "org.eclipse.jetty"         %  "jetty-servlets"         % jettyV9Version
-val jettyServletV9          = "org.eclipse.jetty"         %  "jetty-servlet"          % jettyV9Version
+val servletApiV3            = "javax.servlet"             %  "javax.servlet-api"          % "3.0.1"
+val jettyServletV9          = "org.eclipse.jetty"         %  "jetty-servlet"              % jettyV9Version
+val tomcatServletV8         = "org.apache.tomcat"         % "tomcat-catalina"             % tomcatV8Version
 
 val httpClient              = "org.apache.httpcomponents" %  "httpclient"             % "4.5.5"
 val logbackClassic          = "ch.qos.logback"            %  "logback-classic"        % "1.0.13"
@@ -65,7 +66,7 @@ lazy val kamonSpring = Project("kamon-spring", file("kamon-spring"))
   .settings(
     libraryDependencies ++=
       compileScope(kamonCore, kamonServlet3, scalaExtension) ++
-      providedScope(jettyServletV9, servletApiV3, springWeb) ++
+      providedScope(jettyServletV9, tomcatServletV8, servletApiV3, springWeb) ++
       testScope(scalatest, kamonTestkit, logbackClassic, springBootStarterWeb, springStarterJetty, httpClient))
 
 lazy val kamonSpringAuto = Project("kamon-spring-auto", file("kamon-spring-auto"))
@@ -76,7 +77,7 @@ lazy val kamonSpringAuto = Project("kamon-spring-auto", file("kamon-spring-auto"
   .settings(
     libraryDependencies ++=
       compileScope(kamonCore, kamonServlet3, springBootAutoconfigure) ++
-      providedScope(springBootStarterWeb, servletApiV3) ++
+      providedScope(springBootStarterWebExcludingTomcat, servletApiV3) ++
       testScope(scalatest, kamonTestkit, logbackClassic, springBootStarterTest, springStarterJetty, httpClient))
 
 lazy val kamonSpringBench = Project("benchmarks", file("kamon-spring-bench"))
@@ -90,5 +91,5 @@ lazy val kamonSpringBench = Project("benchmarks", file("kamon-spring-bench"))
   .settings(noPublishing: _*)
   .settings(
     libraryDependencies ++=
-      compileScope(springBootStarterWeb, springStarterJetty, httpClient))
+      compileScope(springBootStarterWebExcludingTomcat, springStarterJetty, httpClient))
   .dependsOn(kamonSpringAuto)

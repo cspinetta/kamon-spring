@@ -26,7 +26,15 @@ import org.scalatest.concurrent.Eventually
 
 import scala.concurrent.duration.FiniteDuration
 
-class ServerInstrumentationSpec extends FlatSpec
+class JettyServerInstrumentationSpec extends ServerInstrumentationSpec {
+  override def startApp(): Unit = startJettyApp()
+}
+
+class TomcatServerInstrumentationSpec extends ServerInstrumentationSpec {
+  override def startApp(): Unit = startTomcatApp()
+}
+
+abstract class ServerInstrumentationSpec extends FlatSpec
   with Matchers
   with BeforeAndAfterAll
   with Eventually
@@ -35,6 +43,8 @@ class ServerInstrumentationSpec extends FlatSpec
   with Reconfigure
   with AppSupport
   with ServerBehaviors { self =>
+
+  def startApp(): Unit
 
   override protected def beforeAll(): Unit = {
     Kamon.reconfigure(ConfigFactory.load())
@@ -59,5 +69,4 @@ class ServerInstrumentationSpec extends FlatSpec
   "A Server with async controllers instrumented manually" should behave like
     contextPropagation(new Server(prefixEndpoint = "async", exceptionStatus = 500,
       AsyncTracingController.slowlyServiceDuration))
-
 }

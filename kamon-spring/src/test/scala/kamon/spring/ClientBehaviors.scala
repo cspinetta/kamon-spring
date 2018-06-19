@@ -26,7 +26,7 @@ object ClientProvider {
   abstract class Sync extends ClientProvider with AppSupport {
     import Inside._
 
-    private lazy val app: ConfigurableApplicationContext = startApp(kamonSpringWebEnabled = false)
+    private lazy val app: ConfigurableApplicationContext = startJettyApp(kamonSpringWebEnabled = false)
 
     def restTemplate: RestTemplate
 
@@ -48,7 +48,7 @@ object ClientProvider {
   abstract class Async extends ClientProvider with AppSupport {
     import Inside._
 
-    private lazy val app: ConfigurableApplicationContext = startApp(kamonSpringWebEnabled = false)
+    private lazy val app: ConfigurableApplicationContext = startJettyApp(kamonSpringWebEnabled = false)
 
     def asyncRestTemplate: AsyncRestTemplate
 
