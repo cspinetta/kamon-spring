@@ -8,11 +8,18 @@ trait AppSupport {
   private var _port = Option.empty[Int]
 
   def startJettyApp(kamonSpringWebEnabled: Boolean = true): ConfigurableApplicationContext = {
+    System.setProperty("kamon.spring.servlet-container", "jetty")
     startApp(kamonSpringWebEnabled, classOf[AppJettyRunner])
   }
 
   def startTomcatApp(kamonSpringWebEnabled: Boolean = true): ConfigurableApplicationContext = {
+    System.setProperty("kamon.spring.servlet-container", "tomcat")
     startApp(kamonSpringWebEnabled, classOf[AppTomcatRunner])
+  }
+
+  def startUndertowApp(kamonSpringWebEnabled: Boolean = true): ConfigurableApplicationContext = {
+    System.setProperty("kamon.spring.servlet-container", "undertow")
+    startApp(kamonSpringWebEnabled, classOf[AppUndertowRunner])
   }
 
   private def startApp(kamonSpringWebEnabled: Boolean = true, appClass: Class[_]): ConfigurableApplicationContext = {

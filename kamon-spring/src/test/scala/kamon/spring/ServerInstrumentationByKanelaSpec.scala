@@ -37,6 +37,11 @@ class TomcatServerInstrumentationByKanelaSpec extends ServerInstrumentationSpec 
   override def startApp(): Unit = startTomcatApp(kamonSpringWebEnabled = false)
 }
 
+@ForkTest(attachKanelaAgent = true)
+class UndertowServerInstrumentationByKanelaSpec extends ServerInstrumentationSpec {
+  override def startApp(): Unit = startUndertowApp(kamonSpringWebEnabled = false)
+}
+
 abstract class ServerInstrumentationByKanelaSpec extends FlatSpec
   with Matchers
   with BeforeAndAfterAll

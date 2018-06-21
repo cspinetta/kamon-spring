@@ -34,6 +34,10 @@ class TomcatServerInstrumentationSpec extends ServerInstrumentationSpec {
   override def startApp(): Unit = startTomcatApp()
 }
 
+class UndertowServerInstrumentationSpec extends ServerInstrumentationSpec {
+  override def startApp(): Unit = startUndertowApp()
+}
+
 abstract class ServerInstrumentationSpec extends FlatSpec
   with Matchers
   with BeforeAndAfterAll
